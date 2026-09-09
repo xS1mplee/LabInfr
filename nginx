@@ -1,26 +1,40 @@
 events {
- worker_connections 1024;
- }
+    worker_connections 1024;
+}
 
- http{
-    upstream backend_prod{
-       server api-prod-1:8080;
-       server api-prod-2:8080;
-       }
-
-    upstream backend_qa{
-       server api-qa:8080;
-       }
-
-    server{
-       listen 80;
-
-       location /api/ {
-            proxy_pass htpp://backend_prod;
-       }
-
-       location /qa/ {
-                proxy_pass http://backend_qa;
-       }
+http {
+    # Balanceo de carga para Produccion
+    upstream backend_prod {
+        server api-prod-1:8080;
+        server api-prod-2:8080;
     }
-  }
+
+    # Instancia de QA
+    upstream backend_qa {
+        server api-qa:8080;
+    }
+
+    # Enrutamiento de Produccion por Nombre de Dominio
+    server {
+        listen 80;
+        server_name api.dominio.com;
+
+        location / {
+            proxy_pass http://backend_prod;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+    # Enrutamiento de QA por Nombre de Dominio
+    server {
+        listen 80;
+        server_name qa-api.dominio.com;
+
+        location / {
+            proxy_pass http://backend_qa;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}

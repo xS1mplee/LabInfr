@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: proxy-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-prod-1
+      - api-prod-2
+      - api-qa
+    networks:
+      - red-servicios
+
+  api-prod-1:
+    build: .
+    container_name: api-prod-1
+    environment:
+      DB_HOST: bd-produccion
+      DB_NAME: bd_prod
+    depends_on:
+      - bd-produccion
+    networks:
+      - red-servicios
+
+  api-prod-2:
+    build: .
+    container_name: api-prod-2
+    environment:
+      DB_HOST: bd-produccion
+      DB_NAME: bd_prod
+    depends_on:
+      - bd-produccion
+    networks:
+      - red-servicios
+
+  api-qa:
+    build: .
+    container_name: api-qa
+    environment:
+      DB_HOST: bd-qa
+      DB_NAME: bd_qa
+    depends_on:
+      - bd-qa
+    networks:
+      - red-servicios
+
+  bd-produccion:
+    image: postgres:15-alpine
+    container_name: bd-produccion
+    environment:
+      POSTGRES_DB: bd_prod
+      POSTGRES_USER: admin_prod
+      POSTGRES_PASSWORD: clave_segura_prod
+    volumes:
+      - datos-prod:/var/lib/postgresql/data
+    networks:
+      - red-servicios
+
+  bd-qa:
+    image: postgres:15-alpine
+    container_name: bd-qa
+    environment:
+      POSTGRES_DB: bd_qa
+      POSTGRES_USER: admin_qa
+      POSTGRES_PASSWORD: clave_segura_qa
+    volumes:
+      - datos-qa:/var/lib/postgresql/data
+    networks:
+      - red-servicios
+
+networks:
+  red-servicios:
+    driver: bridge
+
+volumes:
+  datos-prod:
+  datos-qa:

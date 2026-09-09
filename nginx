@@ -1,0 +1,26 @@
+events {
+ worker_connections 1024;
+ }
+
+ http{
+    upstream backend_prod{
+       server api-prod-1:8080;
+       server api-prod-2:8080;
+       }
+
+    upstream backend_qa{
+       server api-qa:8080;
+       }
+
+    server{
+       listen 80;
+
+       location /api/ {
+            proxy_pass htpp://backend_prod;
+       }
+
+       location /qa/ {
+                proxy_pass http://backend_qa;
+       }
+    }
+  }
